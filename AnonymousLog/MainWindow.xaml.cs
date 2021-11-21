@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -161,8 +161,8 @@ namespace AnonymousLog
                             hash ^= b;
                         }
 
-                        return (le, $"Anonymous{hash & 0xFFFF:x04}");
-                        //return (le, $"Anonymous");
+                        //return (le, $"Anonymous{hash & 0xFFFF:x04}");
+                        return (le, $"Anonymous");
                     }).
                     ToDictionary(le => le.le, le => le.Item2);
 
@@ -198,7 +198,7 @@ namespace AnonymousLog
                                 this.CtlSaveText.Text = $"{p * 100:##0} %";
 
                                 //////////////////////////////////////////////////
-                                if (line.StartsWith("00|")) continue;
+                                //if (line.StartsWith("00|")) continue;
 
                                 lineNum++;
 
@@ -210,15 +210,16 @@ namespace AnonymousLog
                                         lineNum = 1;
                                     }
 
+                                    _ = sb.Clear();
+                                    _ = sb.Append(m.Groups["code"].ToString());
+                                    _ = sb.Append('|');
+                                    _ = sb.Append(m.Groups["date"].ToString());
+                                    _ = sb.Append('|');
+
                                     if (NameIndexes.TryGetValue(code, out var indexes))
                                     {
                                         var lineBody = m.Groups["body"].Value;
 
-                                        _ = sb.Clear();
-                                        _ = sb.Append(m.Groups["code"].ToString());
-                                        _ = sb.Append('|');
-                                        _ = sb.Append(m.Groups["date"].ToString());
-                                        _ = sb.Append('|');
 
                                         string part;
                                         var currentIndex = 0;
@@ -261,15 +262,19 @@ namespace AnonymousLog
                                             }
                                             currentIndex++;
                                         }
-
-                                        var hash = md5.ComputeHash(Encoding.UTF8.GetBytes($"{sb}{lineNum}"));
-                                        foreach (var b in hash)
-                                        {
-                                            _ = sb.Append(b.ToString("x02"));
-                                        }
-
-                                        line = sb.ToString();
                                     }
+                                    else
+                                    {
+                                        _ = sb.Append(m.Groups["body"].Value);
+                                    }
+
+                                    var hash = md5.ComputeHash(Encoding.UTF8.GetBytes($"{sb}{lineNum}"));
+                                    foreach (var b in hash)
+                                    {
+                                        _ = sb.Append(b.ToString("x02"));
+                                    }
+
+                                    line = sb.ToString();
                                 }
 
                                 await saveStream.WriteLineAsync(line);
